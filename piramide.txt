@@ -1,0 +1,35 @@
+void main() {
+  final count = 5;
+  var saida = '';
+  var fimLinha = 0;
+  for (var i = 1; i <= count; i++) {
+    saida = '';
+    for (var e = (count - i); e > 0; e--){
+      saida += ' ';
+    }
+    if(i == 1){
+      saida += '/\\';
+    }
+    else{
+      for (var j = 0; j <= i + fimLinha; j++){
+        if(j == 0){
+          saida += '/';
+        }
+        else if(j == i + fimLinha){
+          saida += '\\';
+        }
+        else{
+          if(i == count){
+            saida += '_';
+          }
+          else{
+            saida += ' ';
+          }
+        }
+      }
+    }
+    
+    fimLinha++;
+    print(saida);
+  }
+}

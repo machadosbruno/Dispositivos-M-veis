@@ -1,0 +1,114 @@
+
+
+
+
+
+
+int fibonacci(int n) {
+  if (n == 0 || n == 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+
+
+void main() {
+  
+  /*var name = 'Voyager I';
+  var year = 1977;
+  var antennaDiameter = 3.7;
+  var flybyObjects = ['Jupiter', 'Saturn', 'Uranus', 'Neptune'];
+  var image = {
+    'tags': ['saturn'],
+    'url': '//path/to/saturn.jpg',
+  };*/
+
+  /*print(name);
+  print(year);
+  print(antennaDiameter);
+  print(flybyObjects.first);
+  print(image);*/
+  
+  /*if (year >= 2001) {
+    print('21st century');
+  } else if (year >= 1901) {
+    print('20th century');
+  }
+
+  for (final object in flybyObjects) {
+    print(object);
+  }
+
+  for (int month = 1; month <= 12; month++) {
+    print(month);
+  }
+
+  while (year < 2016) {
+    year += 1;
+  }
+  print(year);*/
+  
+  
+  var result = fibonacci(20);
+  print(result);
+
+}
+
+
+
+
+
+
+
+
+/*int porDois(int numero){
+  return numero * 2;
+}*/
+int porDois(int numero) => numero*2;
+
+void main(){
+  var numero = 3;
+  //var resultado = porDois(numero); 
+  //print(resultado);
+  print(porDois(numero)); //<- simplificado
+  
+}
+
+
+
+
+
+import 'dart:math';
+
+double area(var raio) {
+  //return pi * raio * raio;
+  return pi * pow(raio, 2);
+}
+
+void main(){
+  print(area(5));
+}
+
+
+
+
+
+
+
+
+
+class Aluno {
+  String nome;
+  double nota1, nota2, nota3;
+  
+  //Construtor
+  Aluno(this.nome, this.nota1, this.nota2, this.nota3);
+  
+  double get notaFinal => (nota1 + nota2 + nota3) / 3;
+  
+  void situacao() => print('aluno: ' + nome);
+}
+
+void main(){
+  var primeiro = Aluno('Fulano', 0, 0, 0);
+  primeiro.situacao();
+}
