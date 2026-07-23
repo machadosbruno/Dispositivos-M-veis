@@ -1,5 +1,5 @@
-# Desenvolvimento-Web-III
+# Desenvolvimento para Dispositivos Moveis
 
-Repositório destinado a armazenar os sites desenvolvidos nas aulas de Desenvolvimento Web III do Curso Tecnólogo em Análise e Desenvolvimento de Sistemas. Curso realizado no IFSP - Barretos.
+Repositório destinado a armazenar os sites desenvolvidos nas aulas de Desenvolvimento para Dispositivos Moveis do Curso Tecnólogo em Análise e Desenvolvimento de Sistemas. Curso realizado no IFSP - Barretos.
 
-5º semestre, ano 2026
+6º semestre, ano 2026
