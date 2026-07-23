@@ -1,2 +1,5 @@
-# Dispositivos-M-veis
+# Desenvolvimento-Web-III
+
 Repositório destinado a armazenar os sites desenvolvidos nas aulas de Desenvolvimento Web III do Curso Tecnólogo em Análise e Desenvolvimento de Sistemas. Curso realizado no IFSP - Barretos.
+
+5º semestre, ano 2026
