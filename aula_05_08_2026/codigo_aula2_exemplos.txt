@@ -1,0 +1,167 @@
+# página 19
+
+
+import 'package:flutter/material.dart';
+
+class CaixaTexto extends StatelessWidget {
+  // construtor
+  const CaixaTexto({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          colors: [
+            Colors.red,
+            Colors.lightBlue,
+          ],
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Center(
+        child: TextoComEstilo('Hello Barretos!'),
+      ),
+    );
+  }
+}
+
+//const tamanhoTexto = 32.0;
+double calcula(double x) {
+  return x * 2;
+}
+
+final tamanhoFonte = calcula(14.0);
+Color cor = Colors.black;
+
+class TextoComEstilo extends StatelessWidget {
+  TextoComEstilo(
+    this.mostrar, {
+    super.key,
+  });
+
+  String mostrar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      mostrar,
+      style: TextStyle(
+        fontSize: tamanhoFonte,
+        color: cor,
+      ),
+    );
+  }
+}
+
+# Página 20
+
+import 'package:flutter/material.dart';
+
+class CaixaTexto extends StatelessWidget {
+  // construtor
+  const CaixaTexto({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          colors: [
+            Colors.red,
+            Colors.lightBlue,
+          ],
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Center(
+        child: TextoComEstilo(
+          'Hello Barretos!',
+          tamanho: 36,
+        ),
+      ),
+    );
+  }
+}
+
+class TextoComEstilo extends StatelessWidget {
+  TextoComEstilo(
+    this.mostrar, {
+    required this.tamanho,
+    super.key,
+  });
+
+  TextoComEstilo.ifsp({super.key})
+      : mostrar = "Hello, IFSP!",
+        tamanho = 42;
+
+  String mostrar;
+  double tamanho;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      mostrar,
+      style: TextStyle(
+        fontSize: tamanho,
+        color: Colors.black,
+      ),
+    );
+  }
+}
+
+
+# Página 21
+
+// main.dart
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MainApp());
+}
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Image.asset('imagens/bart.png'),
+        ),
+      ),
+    );
+  }
+}
+
+// pubspec.yaml
+name: exemplo_imagem
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.2.6 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  assets: 
+    - imagens/bart.png
+    
+  uses-material-design: true
+
