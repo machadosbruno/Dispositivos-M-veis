@@ -26,9 +26,12 @@ class _NovaAppState extends State<NovaApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Text('Tente adivinhar o número sorteado selecionando um dos números abaixo,'),
+              Text(' caso você acerte, o número será sorteado novamente:'),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 20,
                   ),
                   TextButton(

@@ -1,0 +1,126 @@
+Link: https://www.youtube.com/watch?v=7zT-qgNVACs
+
+# Prática 1
+
+```dart
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(
+    const MaterialApp(
+      home: Scaffold(
+        body: JanelaEstado(),
+      ),
+    ),
+  );
+}
+
+class JanelaEstado extends StatefulWidget {
+  const JanelaEstado({super.key});
+
+  @override
+  State<JanelaEstado> createState() => _JanelaEstadoState();
+}
+
+class _JanelaEstadoState extends State<JanelaEstado> {
+  String mensagem = 'Escolha um número:';
+  var gerado = Random().nextInt(5) + 1;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(mensagem),
+          const SizedBox(
+            height: 20,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  if (gerado == 1) {
+                    setState(() {
+                      mensagem = 'Acertou!';
+                    });
+                    print('acertou');
+                  } else {
+                    setState(() {
+                      mensagem = 'Errou, Tente novamente!';
+                    });
+                  }
+                },
+                child: const Text('1'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (gerado == 2) {
+                    setState(() {
+                      mensagem = 'Acertou!';
+                    });
+                    print('acertou');
+                  } else {
+                    setState(() {
+                      mensagem = 'Errou, Tente novamente!';
+                    });
+                  }
+                },
+                child: const Text('2'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (gerado == 3) {
+                    setState(() {
+                      mensagem = 'Acertou!';
+                    });
+                    print('acertou');
+                  } else {
+                    setState(() {
+                      mensagem = 'Errou, Tente novamente!';
+                    });
+                  }
+                },
+                child: const Text('3'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (gerado == 4) {
+                    setState(() {
+                      mensagem = 'Acertou!';
+                    });
+                    print('acertou');
+                  } else {
+                    setState(() {
+                      mensagem = 'Errou, Tente novamente!';
+                    });
+                  }
+                },
+                child: const Text('4'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (gerado == 5) {
+                    setState(() {
+                      mensagem = 'Acertou!';
+                    });
+                    print('acertou');
+                  } else {
+                    setState(() {
+                      mensagem = 'Errou, Tente novamente!';
+                    });
+                  }
+                },
+                child: const Text('5'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
