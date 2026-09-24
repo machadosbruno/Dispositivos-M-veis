@@ -1,0 +1,19 @@
+1. Adicionar o GIT
+
+Abra o terminal e digite:
+
+git config --global --add safe.directory '*'
+
+2. Criar o projeto e confiar
+
+3. Finalizar tarefa: Git for windows
+
+
+Navigator: https://docs.flutter.dev/cookbook/navigation/navigation-basics
+
+Prática
+
+Altere o código retorna.dart para mostrar se o usuário acertou ou errou a operação.
+
+
+
