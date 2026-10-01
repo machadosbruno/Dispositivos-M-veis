@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 Future<Postagem> buscaPostagem(String id) async {
+  print('Buscando postagem $id...');
   final resposta = await http.get(
     Uri.parse('https://viacep.com.br/ws/$id/json/'),
     headers: {'Accept': 'application/json'},
@@ -21,34 +22,30 @@ Future<Postagem> buscaPostagem(String id) async {
 }
 
 class Postagem {
-  final int id;
-  final String title;
-  final double rating;
-  final double price;
-  final String category;
+  final String logradouro;
+  final String bairro;
+  final String cidade;
+  final String estado;
 
   const Postagem(
-      {required this.rating,
-      required this.id,
-      required this.title,
-      required this.price,
-      required this.category});
+      {required this.logradouro,
+      required this.bairro,
+      required this.cidade,
+      required this.estado});
 
   factory Postagem.fromJson(Map<String, dynamic> json) {
     return switch (json) {
       {
-        'id': int id,
-        'title': String title,
-        'rating': num rating,
-        'price': num price,
-        'category': String category
+        'logradouro': String logradouro,
+        'bairro': String bairro,
+        'localidade': String cidade,
+        'estado': String estado
       } =>
         Postagem(
-            id: id,
-            title: title,
-            rating: rating.toDouble(),
-            price: price.toDouble(),
-            category: category),
+            logradouro: logradouro,
+            bairro: bairro,
+            cidade: cidade,
+            estado: estado),
       _ => throw const FormatException('Falha no carregamento...'),
     };
   }
@@ -70,8 +67,12 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    id = '1';
-    postFuturo = buscaPostagem(id);
+    id = '01001000';
+    postFuturo = Future<Postagem>.value( const Postagem(
+      logradouro: '',
+      bairro: '',
+      cidade: '',
+      estado: ''));
   }
 
   @override
@@ -87,10 +88,10 @@ class _MyAppState extends State<MyApp> {
                 controller: _MenuController,
               ),
               ElevatedButton(
-                child: Text('Próximo post'),
+                child: Text('Verificar endereço do CEP'),
                 onPressed: () {
                   setState(() {
-                    id = (int.parse(id) + 1).toString();
+                    id = _MenuController.text;
                     postFuturo = buscaPostagem(id);
                   });
                 },
@@ -101,13 +102,13 @@ class _MyAppState extends State<MyApp> {
                     if (snapshot.hasData) {
                       return Column(
                         children: [
-                          Text('Título: ${snapshot.data!.title}'),
+                          Text('Logradouro: ${snapshot.data!.logradouro}'),
                           const SizedBox(height: 10),
-                          Text('Categoria: ${snapshot.data!.category}'),
+                          Text('Bairro: ${snapshot.data!.bairro}'),
                           const SizedBox(height: 10),
-                          Text('Avaliação: ${snapshot.data!.rating}'),
+                          Text('Cidade: ${snapshot.data!.cidade}'),
                           const SizedBox(height: 10),
-                          Text('Preço: ${snapshot.data!.price}'),
+                          Text('Estado: ${snapshot.data!.estado}'),
                         ],
                       );
                     } else if (snapshot.hasError) {
