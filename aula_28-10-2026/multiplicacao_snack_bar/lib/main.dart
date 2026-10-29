@@ -1,7 +1,6 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:multiplicacao_snack_bar/questoes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MultiplicacaoApp());
@@ -31,146 +30,192 @@ class Controle extends StatefulWidget {
 }
 
 class _ControleState extends State<Controle> {
-  final Random _aleatorio = Random();
-  List<Pergunta> _questoes = [];
-  List<int> _opcoes = [];
-  int _qualPergunta = 0;
-  int _acertos = 0;
+  static const _chaveFator = 'fator';
+  static const _chaveMultiplicador = 'multiplicador';
+
+  int _fator = 1;
+  int _multiplicador = 1;
+  String _resposta = '';
+  bool _carregado = false;
   bool _quizIniciado = false;
-  bool _quizFinalizado = false;
-  bool _respondendo = false;
-  OverlayEntry? _toastEntry;
+  bool _aguardandoClique = false;
 
-  void _iniciarQuiz() {
-    final questoes = gerarQuestoes();
-    setState(() {
-      _questoes = questoes;
-      _qualPergunta = 0;
-      _acertos = 0;
-      _opcoes = _gerarOpcoes(questoes.first);
-      _quizIniciado = true;
-      _quizFinalizado = false;
-      _respondendo = false;
-    });
+  Pergunta get _pergunta => Pergunta(_fator, _multiplicador);
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarPosicao();
   }
 
-  List<int> _gerarOpcoes(Pergunta pergunta) {
-    final opcoes = <int>{pergunta.resposta};
-    while (opcoes.length < 4) {
-      opcoes.add(_aleatorio.nextInt(100) + 1);
-    }
-    return opcoes.toList()..shuffle(_aleatorio);
-  }
-
-  Future<void> _responder(int resposta) async {
-    if (_respondendo) {
+  Future<void> _carregarPosicao() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) {
       return;
     }
-
-    final pergunta = _questoes[_qualPergunta];
-    final acertou = resposta == pergunta.resposta;
-
     setState(() {
-      _respondendo = true;
-      if (acertou) {
-        _acertos++;
+      _fator = prefs.getInt(_chaveFator) ?? 1;
+      _multiplicador = prefs.getInt(_chaveMultiplicador) ?? 1;
+      _carregado = true;
+    });
+  }
+
+  Future<void> _salvarPosicao() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_chaveFator, _fator);
+    await prefs.setInt(_chaveMultiplicador, _multiplicador);
+  }
+
+  void _iniciarQuiz() {
+    setState(() {
+      _quizIniciado = true;
+      _resposta = '';
+    });
+  }
+
+  // Avança para o próximo fator, voltando ao 1 depois do último.
+  void _mudarFator() {
+    _fator = _fator % totalFatores + 1;
+    _multiplicador = 1;
+  }
+
+  void _digitar(int digito) {
+    if (_aguardandoClique || _resposta.length >= 3) {
+      return;
+    }
+    setState(() {
+      _resposta += '$digito';
+    });
+  }
+
+  void _apagar() {
+    if (_aguardandoClique || _resposta.isEmpty) {
+      return;
+    }
+    setState(() {
+      _resposta = _resposta.substring(0, _resposta.length - 1);
+    });
+  }
+
+  void _confirmar() {
+    if (_aguardandoClique || _resposta.isEmpty) {
+      return;
+    }
+    if (int.parse(_resposta) == _pergunta.resposta) {
+      _acertou();
+    } else {
+      _errou();
+    }
+  }
+
+  void _acertou() {
+    final completouFator = _multiplicador == multiplicadoresPorFator;
+    setState(() {
+      _resposta = '';
+      if (completouFator) {
+        _mudarFator();
+      } else {
+        _multiplicador++;
       }
     });
+    _salvarPosicao();
+    _mostrarMensagem(
+      completouFator
+          ? 'Acertou todas! Agora a tabuada do $_fator.'
+          : 'Acertou!',
+      Colors.green.shade700,
+    );
+  }
 
-    late final OverlayEntry toast;
-    toast = OverlayEntry(
-      builder: (context) => Positioned(
-        top: MediaQuery.paddingOf(context).top + kToolbarHeight + 16,
-        left: 0,
-        right: 0,
-        child: Center(
-          child: Material(
-            color: acertou ? Colors.green.shade700 : Colors.red.shade700,
-            elevation: 6,
-            borderRadius: BorderRadius.circular(24),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: acertou ? null : () => _continuarAposErro(toast),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Text(
-                  acertou ? 'Acertou!' : 'Errou, clique aqui para continuar.',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+  Future<void> _errou() async {
+    setState(() {
+      _aguardandoClique = true;
+      _resposta = '';
+    });
+
+    final mensageiro = ScaffoldMessenger.of(context)..clearSnackBars();
+    final motivo = await mensageiro
+        .showSnackBar(
+          SnackBar(
+            content: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => mensageiro.hideCurrentSnackBar(
+                reason: SnackBarClosedReason.action,
+              ),
+              child: const Text(
+                'Errou, clique aqui para continuar.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            width: 320,
           ),
-        ),
-      ),
-    );
-    _toastEntry = toast;
-    Overlay.of(context).insert(toast);
-
-    if (!acertou) {
-      return;
-    }
-
-    await Future<void>.delayed(const Duration(seconds: 2));
+        )
+        .closed;
 
     if (!mounted) {
       return;
     }
 
-    _removerToast(toast);
+    // Clicou na mensagem: continua no fator atual.
+    // Não clicou: a sequência termina e muda de fator.
+    final continuar = motivo == SnackBarClosedReason.action;
     setState(() {
-      _qualPergunta++;
-      if (_qualPergunta == _questoes.length) {
-        _quizFinalizado = true;
-      } else {
-        _opcoes = _gerarOpcoes(_questoes[_qualPergunta]);
+      _aguardandoClique = false;
+      if (!continuar) {
+        _mudarFator();
       }
-      _respondendo = false;
     });
-  }
-
-  void _continuarAposErro(OverlayEntry toast) {
-    if (!mounted || !identical(_toastEntry, toast)) {
-      return;
-    }
-
-    _removerToast(toast);
-    setState(() {
-      _respondendo = false;
-    });
-  }
-
-  void _removerToast(OverlayEntry toast) {
-    if (identical(_toastEntry, toast)) {
-      _toastEntry = null;
-      toast.remove();
+    if (!continuar) {
+      _salvarPosicao();
+      _mostrarMensagem(
+        'Mudando para a tabuada do $_fator.',
+        Colors.orange.shade800,
+      );
     }
   }
 
-  @override
-  void dispose() {
-    final toast = _toastEntry;
-    if (toast != null) {
-      _removerToast(toast);
-    }
-    super.dispose();
+  void _mostrarMensagem(String texto, Color cor) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            texto,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: cor,
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          width: 320,
+        ),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_carregado) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     if (!_quizIniciado) {
       return _telaInicial();
-    }
-    if (_quizFinalizado) {
-      return _telaResultado();
     }
     return _telaPergunta();
   }
 
   Widget _telaInicial() {
+    final comecando = _fator == 1 && _multiplicador == 1;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Quiz de multiplicação')),
       body: Center(
@@ -191,8 +236,11 @@ class _ControleState extends State<Controle> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Responda 10 perguntas com fatores de 1 a 10.',
+              Text(
+                comecando
+                    ? 'Acerte toda a tabuada de cada fator, de 1 a 10.'
+                    : 'Continue de onde parou: tabuada do $_fator, '
+                        'questão $_multiplicador.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -209,7 +257,6 @@ class _ControleState extends State<Controle> {
   }
 
   Widget _telaPergunta() {
-    final pergunta = _questoes[_qualPergunta];
     final tema = Theme.of(context);
 
     return Scaffold(
@@ -224,37 +271,38 @@ class _ControleState extends State<Controle> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Questão ${_qualPergunta + 1} de ${_questoes.length}',
+                    'Tabuada do $_fator: questão $_multiplicador de '
+                    '$multiplicadoresPorFator',
                     textAlign: TextAlign.center,
                     style: tema.textTheme.titleMedium,
                   ),
-                  SnackBarExample(),
                   const SizedBox(height: 12),
                   LinearProgressIndicator(
-                    value: (_qualPergunta + 1) / _questoes.length,
+                    value: (_multiplicador - 1) / multiplicadoresPorFator,
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    pergunta.enunciado,
+                    _pergunta.enunciado,
                     textAlign: TextAlign.center,
                     style: tema.textTheme.displaySmall
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 24),
-                  for (final opcao in _opcoes) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: FilledButton(
-                        key: ValueKey<int>(opcao),
-                        onPressed:
-                            _respondendo ? null : () => _responder(opcao),
-                        child: Text(
-                          '$opcao',
-                          style: tema.textTheme.titleLarge,
-                        ),
-                      ),
+                  const SizedBox(height: 16),
+                  Container(
+                    key: const Key('visor'),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: tema.colorScheme.outline),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                    child: Text(
+                      _resposta.isEmpty ? ' ' : _resposta,
+                      textAlign: TextAlign.center,
+                      style: tema.textTheme.headlineMedium,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _teclado(tema),
                 ],
               ),
             ),
@@ -264,63 +312,56 @@ class _ControleState extends State<Controle> {
     );
   }
 
-  Widget _telaResultado() {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Resultado')),
-      body: Center(
+  Widget _teclado(ThemeData tema) {
+    final habilitado = !_aguardandoClique;
+
+    Widget tecla(Key key, Widget rotulo, VoidCallback onPressed,
+        {bool destaque = false}) {
+      final acao = habilitado ? onPressed : null;
+      return Expanded(
         child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.emoji_events,
-                size: 96,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Você acertou $_acertos de ${_questoes.length} questões!',
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: _iniciarQuiz,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Jogar novamente'),
-              ),
-            ],
+          padding: const EdgeInsets.all(4),
+          child: SizedBox(
+            height: 56,
+            child: destaque
+                ? FilledButton(key: key, onPressed: acao, child: rotulo)
+                : FilledButton.tonal(key: key, onPressed: acao, child: rotulo),
           ),
         ),
-      ),
-    );
-  }
-}
+      );
+    }
 
-
-class SnackBarExample extends StatelessWidget {
-  const SnackBarExample({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      child: const Text('Show Snackbar'),
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(''),
-            action: SnackBarAction(
-              label: 'Action',
-              onPressed: () {
-                // Code to execute.
-              },
-            ),
-            width: 280.0,
-            behavior: SnackBarBehavior.floating,
-          ),
+    Widget digito(int numero) => tecla(
+          Key('tecla_$numero'),
+          Text('$numero', style: tema.textTheme.titleLarge),
+          () => _digitar(numero),
         );
-      },
+
+    return Column(
+      children: [
+        for (final linha in const [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+        ])
+          Row(children: [for (final numero in linha) digito(numero)]),
+        Row(
+          children: [
+            tecla(
+              const Key('apagar'),
+              const Icon(Icons.backspace_outlined),
+              _apagar,
+            ),
+            digito(0),
+            tecla(
+              const Key('confirmar'),
+              const Icon(Icons.check),
+              _confirmar,
+              destaque: true,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
