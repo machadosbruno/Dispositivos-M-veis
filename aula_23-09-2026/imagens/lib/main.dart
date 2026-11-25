@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'dart:math';
-
 void main() {
   runApp(const MyApp());
 }
@@ -24,24 +22,26 @@ class Escolher extends StatefulWidget {
 
 class _EscolherState extends State<Escolher> {
   final itens = [
-    'assets/foca.jpg',
-    'assets/koala.jpg',
-    'assets/onca.jpg',
-    'assets/capivara.webp'
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Capybara_(Hydrochoerus_hydrochaeris).JPG?width=100',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Koala_climbing_tree.jpg?width=100',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Giraffe_Mikumi_National_Park.jpg?width=100',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Lion_waiting_in_Namibia.jpg?width=100',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Tiger_in_Ranthambhore.jpg?width=100',
   ];
+  final aprovadas = <String>[];
 
-  Future<void> esperaResposta(int x, BuildContext context) async {
+  Future<void> esperaResposta(String x, BuildContext context) async {
     final resultado = await Navigator.push(
       context,
-      MaterialPageRoute<bool>(builder: (context) => Teste(x)),
+      MaterialPageRoute<bool>(builder: (context) => Avaliar(x)),
     );
 
     if (!context.mounted) return;
 
     print('Respondeu: $resultado');
-    if (resultado == true) {
+    if (resultado == true && !aprovadas.contains(x)) {
       setState(() {
-        itens.remove(x);
+        aprovadas.add(x);
       });
     }
   }
@@ -53,71 +53,78 @@ class _EscolherState extends State<Escolher> {
         children: [
           ...itens.map((e) {
             return GestureDetector(
-              child: Image.asset(
+              child: Image.network(
                 e,
-                width: 150.0,
+                width: 100.0,
                 fit: BoxFit.cover,
               ),
               onTap: () {
-                print('clicou');
-                //esperaResposta(e, context);
+                esperaResposta(e, context);
               },
             );
           }),
+          ElevatedButton(
+            child: Text('Ver aprovadas'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Resultado(aprovadas)),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 }
 
-class Teste extends StatefulWidget {
-  Teste(this.x, {super.key});
+class Avaliar extends StatelessWidget {
+  const Avaliar(this.imagem, {super.key});
 
-  final int x;
-
-  @override
-  State<Teste> createState() => _TesteState();
-}
-
-class _TesteState extends State<Teste> {
-  var operacao = '';
-  int numeroAleatorio = 0;
-  int esperado = 0;
-  String resultado = '';
-  TextEditingController controlaTexto = TextEditingController();
-
-  @override
-  void initState() {
-    numeroAleatorio = Random().nextInt(9) + 1;
-    operacao = '${widget.x} + $numeroAleatorio';
-    esperado = widget.x + numeroAleatorio;
-  }
+  final String imagem;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ida')),
+      appBar: AppBar(title: const Text('Avaliar')),
       body: Center(
         child: Column(
           children: [
-            Text(operacao),
-            TextField(
-              controller: controlaTexto,
+            Image.network(imagem, width: 200.0),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: Text('Aprovar'),
             ),
             ElevatedButton(
-                onPressed: () {
-                  resultado = controlaTexto.text;
-                  if (esperado.toString() == resultado) {
-                    print('Retornando: true');
-                    Navigator.pop(context, true);
-                  } else {
-                    print('Retornando: false');
-                    Navigator.pop(context, false);
-                  }
-                },
-                child: Text('Verificar'))
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: Text('Reprovar'),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class Resultado extends StatelessWidget {
+  const Resultado(this.aprovadas, {super.key});
+
+  final List<String> aprovadas;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Aprovadas')),
+      body: Column(
+        children: [
+          ...aprovadas.map((e) {
+            return Image.network(e, width: 100.0);
+          }),
+        ],
       ),
     );
   }
