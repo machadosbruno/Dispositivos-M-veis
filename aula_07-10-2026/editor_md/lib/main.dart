@@ -50,19 +50,27 @@ class _MyAppState extends State<MyApp> {
   }
 
   void buscaX() async {
-    if (_arquivo == null) {
-      String valor = await lerX();
-      setState(() {
-        x = valor;
-      });
-    }
+    String valor = await lerX();
+    setState(() {
+      x = valor;
+      controlador.text = valor;
+    });
     print('Mostrando x: $x');
   }
 
   void salvar() async {
-    escreveX(controlador.text);
+    await escreveX(controlador.text);
 
     print('Salvando x:' + controlador.text);
+    buscaX();
+  }
+
+  void apagar() async {
+    final arquivo = await _arquivo;
+    if (await arquivo.exists()) {
+      await arquivo.delete();
+    }
+    controlador.clear();
     buscaX();
   }
 
@@ -90,6 +98,7 @@ class _MyAppState extends State<MyApp> {
               Row(
                 children: [
                   ElevatedButton(onPressed: salvar, child: Text('Salvar')),
+                  ElevatedButton(onPressed: apagar, child: Text('Apagar')),
                 ],
               ),
             ],

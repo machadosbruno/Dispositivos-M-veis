@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -14,39 +17,73 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   TextEditingController controlador = TextEditingController();
-  TextEditingController controladorEstado = TextEditingController();
-  TextEditingController controladorCidade = TextEditingController();
-  TextEditingController controladorBairro = TextEditingController();
   TextEditingController controladorNumero = TextEditingController();
-  int x = 0;
+  String rua = '';
+  String bairro = '';
+  String cidade = '';
+  String estado = '';
+  String mensagem = '';
 
   @override
   void initState() {
     super.initState();
-    buscaX();
+    carregar();
   }
 
-  void buscaX() async {
+  // carrega os dados salvos na inicialização
+  void carregar() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      x = prefs.getInt('x') ?? 0;
+      controlador.text = prefs.getString('cep') ?? '';
+      controladorNumero.text = prefs.getString('numero') ?? '';
+      rua = prefs.getString('rua') ?? '';
+      bairro = prefs.getString('bairro') ?? '';
+      cidade = prefs.getString('cidade') ?? '';
+      estado = prefs.getString('estado') ?? '';
     });
-    print('Mostrando x: $x');
+  }
+
+  // busca o endereço na API viacep
+  void buscar() async {
+    final resposta = await http.get(
+      Uri.parse('https://viacep.com.br/ws/${controlador.text}/json/'),
+    );
+    final dados = jsonDecode(resposta.body);
+    setState(() {
+      if (resposta.statusCode == 200 && dados['erro'] == null) {
+        rua = dados['logradouro'];
+        bairro = dados['bairro'];
+        cidade = dados['localidade'];
+        estado = dados['estado'];
+        mensagem = '';
+      } else {
+        mensagem = 'CEP não encontrado';
+      }
+    });
   }
 
   void salvar() async {
     final prefs = await SharedPreferences.getInstance();
-    int x = int.parse(controlador.text);
-    await prefs.setInt('x', x);
-
-    print('Salvando x:' + controlador.text);
-    buscaX();
+    await prefs.setString('cep', controlador.text);
+    await prefs.setString('numero', controladorNumero.text);
+    await prefs.setString('rua', rua);
+    await prefs.setString('bairro', bairro);
+    await prefs.setString('cidade', cidade);
+    await prefs.setString('estado', estado);
+    print('Salvando CEP: ${controlador.text}');
   }
 
   void apagar() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('x');
-    buscaX();
+    await prefs.clear();
+    controlador.clear();
+    controladorNumero.clear();
+    setState(() {
+      rua = '';
+      bairro = '';
+      cidade = '';
+      estado = '';
+    });
   }
 
   @override
@@ -57,7 +94,6 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: [
-              Text('Seu CEP: $x'),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
@@ -72,44 +108,20 @@ class _MyAppState extends State<MyApp> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
                   decoration: const InputDecoration(
-                    hintText: 'Estado',
-                    border: OutlineInputBorder(),
-                  ),
-                  controller: controladorEstado,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'Cidade',
-                    border: OutlineInputBorder(),
-                  ),
-                  controller: controladorCidade,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'Bairro',
-                    border: OutlineInputBorder(),
-                  ),
-                  controller: controladorBairro,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  decoration: const InputDecoration(
                     hintText: 'Número',
                     border: OutlineInputBorder(),
                   ),
                   controller: controladorNumero,
                 ),
               ),
+              Text(mensagem),
+              Text('Rua: $rua, ${controladorNumero.text}'),
+              Text('Bairro: $bairro'),
+              Text('Cidade: $cidade'),
+              Text('Estado: $estado'),
               Row(
                 children: [
+                  ElevatedButton(onPressed: buscar, child: Text('Buscar')),
                   ElevatedButton(onPressed: salvar, child: Text('Salvar')),
                   ElevatedButton(onPressed: apagar, child: Text('Apagar')),
                 ],
