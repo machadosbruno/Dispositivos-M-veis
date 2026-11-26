@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-// 10.0.2.2 é o PC visto pelo emulador Android
-const api = 'http://10.0.2.2/aula16/servidor/api.php';
+// IP do PC onde roda o XAMPP (api.php direto na htdocs)
+const api = 'http://10.106.76.19/api.php';
 
 int usuarioId = 0; // usuário logado (salvo em shared_preferences)
 String perfil = ''; // produtor, vendedor ou gerente
